@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MATEONCE · Derivadas</title>
+<style>
+:root{--bg:#46178f;--card:#fff;--ink:#1d1d1d;--mut:#666;--r:#e21b3c;--b:#1368ce;--y:#d89e00;--g:#26890c}
+@media (prefers-color-scheme:dark){:root{--bg:#2b0e5a;--card:#1f1f2b;--ink:#f2f2f2;--mut:#aaa}}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:var(--bg);color:#fff;font-family:system-ui,Segoe UI,Arial,sans-serif;display:flex;justify-content:center}
+#app{width:100%;max-width:960px;padding:16px;display:flex;flex-direction:column;gap:14px}
+h1{margin:6px 0;font-size:clamp(26px,6vw,44px);text-align:center}
+h2{margin:0;text-align:center;font-size:clamp(20px,4.5vw,32px)}
+.card{background:var(--card);color:var(--ink);border-radius:14px;padding:18px;box-shadow:0 4px 0 rgba(0,0,0,.25)}
+input{width:100%;padding:14px;font-size:20px;border-radius:10px;border:2px solid #bbb;margin:6px 0;text-align:center;background:#fff;color:#111}
+button{font:inherit;font-weight:700;font-size:20px;border:0;border-radius:10px;padding:14px 20px;cursor:pointer;background:#333;color:#fff;box-shadow:0 4px 0 rgba(0,0,0,.3)}
+button:disabled{opacity:.4;cursor:not-allowed}
+.big{background:#1368ce;width:100%}
+.lnk{background:none;box-shadow:none;color:#ddd;font-size:14px;font-weight:400;text-decoration:underline;width:100%}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.opt{display:flex;align-items:center;gap:10px;padding:18px 12px;border-radius:12px;color:#fff;font-size:clamp(18px,4vw,28px);font-weight:700;min-height:90px;text-align:left;width:100%}
+.o0{background:var(--r)}.o1{background:var(--b)}.o2{background:var(--y)}.o3{background:var(--g)}
+.dim{opacity:.3}
+.q{font-size:clamp(24px,6vw,44px);text-align:center;font-weight:800;padding:26px 10px}
+.row{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.pill{background:rgba(255,255,255,.18);padding:8px 14px;border-radius:99px;font-weight:700}
+.chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.chip{background:rgba(255,255,255,.2);padding:6px 12px;border-radius:99px;font-weight:600}
+.code{font-size:clamp(34px,9vw,70px);font-weight:900;letter-spacing:4px;background:#fff;color:#46178f;border-radius:12px;padding:6px 18px;display:inline-block}
+.center{text-align:center}
+.pod{display:flex;align-items:flex-end;justify-content:center;gap:8px;height:300px;margin-top:10px}
+.pc{flex:1;max-width:220px;display:flex;flex-direction:column;justify-content:flex-end;height:100%}
+.pc .nm{text-align:center;font-weight:800;font-size:clamp(14px,3.5vw,22px);word-break:break-word}
+.pc .pt{text-align:center;font-size:15px;opacity:.85;margin-bottom:4px}
+.bar{border-radius:10px 10px 0 0;display:flex;align-items:flex-start;justify-content:center;font-size:42px;font-weight:900;padding-top:6px;animation:up 1.2s ease-out both;color:#fff}
+@keyframes up{from{height:0!important}}
+.b1{background:#d4a800;height:62%}.b2{background:#9aa0a6;height:44%}.b3{background:#b06a2c;height:30%}
+.bars{display:flex;gap:10px;align-items:flex-end;height:90px}
+.bars div{flex:1;text-align:center;font-weight:800}
+.bars span{display:block;border-radius:6px 6px 0 0;margin-top:2px}
+.msg{padding:30px 14px;text-align:center;font-size:clamp(24px,7vw,40px);font-weight:800;border-radius:14px}
+#qr{display:flex;justify-content:center;background:#fff;padding:10px;border-radius:10px;width:max-content;margin:8px auto}
+small{opacity:.8}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+const CODE="MATEONCE", HID="mateonce-derivadas-sala-host", MAX=35, T=20000;
+const SH=["▲","◆","●","■"];
+// [pregunta, opciones, índice correcto]
+const Q=[
+["f(x) = x⁵  →  f′(x) = ?",["4x⁵","5x⁴","5x⁵","x⁴"],1],
+["f(x) = 7  →  f′(x) = ?",["7","7x","0","1"],2],
+["f(x) = x³  →  f′(x) = ?",["3x²","x²","3x³","2x³"],0],
+["f(x) = 4x²  →  f′(x) = ?",["4x","2x","8x","8x²"],2],
+["f(x) = x¹⁰  →  f′(x) = ?",["10x¹⁰","9x¹⁰","x⁹","10x⁹"],3],
+["f(x) = 3x² + 5x  →  f′(x) = ?",["6x + 5","3x + 5","6x² + 5","6x + 5x"],0],
+["f(x) = x⁴ − 2x³  →  f′(x) = ?",["4x³ − 2x²","4x³ − 6x²","x³ − 6x²","4x − 6x"],1],
+["f(x) = −9  →  f′(x) = ?",["−9","9","−1","0"],3],
+["f(x) = (2x)(x + 3)  →  f′(x) = ?  (regla del producto)",["2","4x + 6","2x + 6","4x + 3"],1],
+["f(x) = x²(x + 1)  →  f′(x) = ?  (regla del producto)",["2x","3x² + 2x","2x + 1","3x² + 1"],1],
+["f(x) = x / (x + 1)  →  f′(x) = ?  (regla del cociente)",["1/(x+1)²","−1/(x+1)²","x/(x+1)²","1/(x+1)"],0],
+["f(x) = (x + 2) / x  →  f′(x) = ?  (regla del cociente)",["1","2/x²","−2/x²","−1/x²"],2],
+["f(x) = 5x³ − 4x² + x − 7  →  f′(x) = ?",["15x² − 8x + 1","15x² − 8x − 7","5x² − 4x + 1","15x² − 4x + 1"],0],
+["f(x) = 2x⁴ + x²  →  f′(x) = ?",["8x³ + x","2x³ + 2x","8x³ + 2x","8x⁴ + 2x²"],2],
+["f(x) = x³ − 3x  →  ¿cuánto vale f′(2)?",["9","3","6","12"],0]
+];
+const $=s=>document.querySelector(s), app=$("#app");
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const optsHTML=(q,fn)=>`<div class="grid">${q.o.map((t,i)=>`<button class="opt o${i}" ${fn?`onclick="${fn}(${i})"`:""}>${SH[i]} ${esc(t)}</button>`).join("")}</div>`;
+const podHTML=list=>{
+  const o=[[1,list[1]],[0,list[0]],[2,list[2]]].filter(x=>x[1]);
+  return `<div class="pod">${o.map(([i,p])=>`<div class="pc"><div class="nm">${esc(p[0])}</div><div class="pt">${p[1]} pts</div><div class="bar b${i+1}" style="animation-delay:${(2-i)*.5}s">${i+1}</div></div>`).join("")}</div>`;
+};
+
+/* ============ ENTRADA ============ */
+function home(err){
+  app.innerHTML=`<h1>🧮 Derivadas · Quiz</h1>
+  <div class="card"><h2 style="color:var(--ink)">Únete al juego</h2>
+  <input id="c" placeholder="Código del juego" autocapitalize="characters" autocomplete="off">
+  <input id="n" placeholder="Tu apodo" maxlength="14" autocomplete="off">
+  <p id="e" style="color:#e21b3c;font-weight:700;margin:4px 0;text-align:center">${err||""}</p>
+  <button class="big" onclick="joinGame()">Entrar</button></div>
+  <button class="lnk" onclick="startHost()">Soy el docente (crear sala)</button>`;
+}
+home();
+
+/* ============ DOCENTE (HOST) ============ */
+let H={players:new Map(),ph:"lobby",qi:-1,tEnd:0,peer:null,tm:null};
+function startHost(){
+  app.innerHTML=`<h2>Abriendo sala…</h2>`;
+  const peer=new Peer(HID); H.peer=peer;
+  peer.on("open",()=>hostRender());
+  peer.on("error",e=>{app.innerHTML=`<div class="card"><h2 style="color:var(--ink)">${e.type==="unavailable-id"?"Ya hay una sala MATEONCE abierta (cierra la otra pestaña o espera 1 minuto).":"Error de conexión: "+esc(e.type)}</h2></div><button class="lnk" onclick="location.reload()">Volver</button>`});
+  peer.on("connection",c=>{
+    c.on("data",m=>hostMsg(c,m));
+    c.on("close",()=>{const p=H.players.get(c.peer);if(p&&H.ph==="lobby"){H.players.delete(c.peer);hostRender();pub()}});
+  });
+}
+function hostMsg(c,m){
+  if(m.t==="join"){
+    let p=H.players.get(c.peer);
+    if(!p){
+      if(H.ph!=="lobby")return c.send({t:"late"});
+      if(H.players.size>=MAX)return c.send({t:"full"});
+      let nm=String(m.name||"Jugador").slice(0,14),k=2,base=nm;
+      while([...H.players.values()].some(x=>x.name===nm))nm=base+k++;
+      p={name:nm,score:0,ans:null,rem:0,ok:null,pts:0};H.players.set(c.peer,p);
+    }
+    p.conn=c;c.send({t:"in",name:p.name});
+    if(H.ph==="lobby")hostRender();
+    pub();
+  }
+  if(m.t==="ans"){
+    const p=H.players.get(c.peer);
+    if(p&&H.ph==="q"&&m.qi===H.qi&&p.ans==null&&m.c>=0&&m.c<4){
+      p.ans=m.c;p.rem=Math.max(0,H.tEnd-Date.now());
+      const a=[...H.players.values()].filter(x=>x.ans!=null).length;
+      const el=$("#cnt");if(el)el.textContent=a;
+      if(a>=H.players.size)reveal();
+    }
+  }
+}
+const ranked=()=>[...H.players.entries()].sort((a,b)=>b[1].score-a[1].score).map(([id,p])=>[p.name,p.score,id]);
+function pub(){
+  const rk=ranked(),top=rk.slice(0,5).map(x=>[x[0],x[1]]);
+  const q=H.qi>=0&&H.qi<Q.length?{x:Q[H.qi][0],o:Q[H.qi][1]}:null;
+  for(const [id,p] of H.players){
+    if(!p.conn||!p.conn.open)continue;
+    p.conn.send({t:"s",ph:H.ph,qi:H.qi,n:Q.length,rem:Math.max(0,H.tEnd-Date.now()),q,
+      cor:H.ph==="r"?Q[H.qi][2]:null,top,total:rk.length,
+      me:{score:p.score,rank:rk.findIndex(x=>x[2]===id)+1,ans:p.ans,ok:p.ok,pts:p.pts}});
+  }
+}
+function hostRender(){
+  clearInterval(H.tm);
+  if(H.ph==="lobby"){
+    app.innerHTML=`<h1>Sala abierta</h1>
+    <div class="card center" style="color:var(--ink)"><div>Escanea el QR e ingresa el código</div>
+    <div class="code">${CODE}</div><div id="qr"></div><small style="color:var(--mut)">${esc(location.href.split("#")[0])}</small></div>
+    <div class="row"><span class="pill">👥 ${H.players.size} / ${MAX}</span>
+    <button style="background:#26890c" ${H.players.size?"":"disabled"} onclick="startQ(0)">▶ Iniciar juego</button></div>
+    <div class="chips">${[...H.players.values()].map(p=>`<span class="chip">${esc(p.name)}</span>`).join("")||"<span>Esperando jugadores…</span>"}</div>`;
+    if(window.QRCode)new QRCode($("#qr"),{text:location.href.split("#")[0],width:200,height:200});
+  }else if(H.ph==="q"){
+    const q=Q[H.qi];
+    app.innerHTML=`<div class="row"><span class="pill">Pregunta ${H.qi+1}/${Q.length}</span><span class="pill">✍️ <b id="cnt">0</b> / ${H.players.size}</span><span class="pill" style="font-size:28px" id="tm">20</span></div>
+    <div class="card q" style="color:var(--ink)">${esc(q[0])}</div>${optsHTML({o:q[1]})}`;
+    H.tm=setInterval(()=>{const r=H.tEnd-Date.now();const e=$("#tm");if(e)e.textContent=Math.max(0,Math.ceil(r/1000));if(r<=0)reveal()},200);
+  }else if(H.ph==="r"){
+    const q=Q[H.qi],cnt=[0,0,0,0];H.players.forEach(p=>{if(p.ans!=null)cnt[p.ans]++});const mx=Math.max(1,...cnt);
+    app.innerHTML=`<div class="row"><span class="pill">Pregunta ${H.qi+1}/${Q.length}</span></div>
+    <div class="card q" style="color:var(--ink)">${esc(q[0])}</div>
+    <div class="bars">${cnt.map((n,i)=>`<div class="${i===q[2]?"":"dim"}">${n}<span class="o${i}" style="height:${Math.round(n/mx*60)+4}px"></span></div>`).join("")}</div>
+    <div class="grid">${q[1].map((t,i)=>`<button class="opt o${i} ${i===q[2]?"":"dim"}">${i===q[2]?"✓":SH[i]} ${esc(t)}</button>`).join("")}</div>
+    <div class="card" style="color:var(--ink)"><b>Marcador:</b> ${ranked().slice(0,5).map((x,i)=>`${i+1}. ${esc(x[0])} (${x[1]})`).join(" · ")}</div>
+    <button class="big" onclick="${H.qi+1<Q.length?`startQ(${H.qi+1})`:"podium()"}">${H.qi+1<Q.length?"Siguiente ▶":"🏆 Ver podio"}</button>`;
+  }else{
+    const rk=ranked();
+    app.innerHTML=`<h1>🏆 ¡Podio final!</h1>${podHTML(rk)}
+    <div class="card" style="color:var(--ink)">${rk.slice(3,10).map((x,i)=>`<div class="row"><span>${i+4}. ${esc(x[0])}</span><b>${x[1]} pts</b></div>`).join("")||"<div class='center'>¡Gracias por jugar!</div>"}</div>
+    <button class="big" onclick="location.reload()">Nueva partida</button>`;
+  }
+}
+function startQ(i){
+  H.ph="q";H.qi=i;H.tEnd=Date.now()+T;
+  H.players.forEach(p=>{p.ans=null;p.ok=null;p.pts=0;p.rem=0});
+  hostRender();pub();
+}
+function reveal(){
+  if(H.ph!=="q")return;
+  H.ph="r";clearInterval(H.tm);
+  H.players.forEach(p=>{
+    p.ok=p.ans==null?null:p.ans===Q[H.qi][2];
+    p.pts=p.ok?500+Math.round(500*p.rem/T):0;p.score+=p.pts;
+  });
+  hostRender();pub();
+}
+function podium(){H.ph="pod";hostRender();pub()}
+
+/* ============ JUGADOR ============ */
+let P={peer:null,conn:null,s:null,end:0,name:"",tm:null};
+function joinGame(){
+  const c=$("#c").value.trim().toUpperCase(),n=$("#n").value.trim();
+  if(c!==CODE)return home("Código incorrecto");
+  if(!n)return home("Escribe tu apodo");
+  P.name=n;app.innerHTML=`<h2>Conectando…</h2>`;
+  P.peer=new Peer();
+  P.peer.on("open",()=>{
+    P.conn=P.peer.connect(HID,{reliable:true});
+    P.conn.on("open",()=>P.conn.send({t:"join",name:n}));
+    P.conn.on("data",playerMsg);
+    P.conn.on("close",()=>home("Se cerró la conexión con la sala"));
+  });
+  P.peer.on("error",e=>home(e.type==="peer-unavailable"?"No se encontró la sala. Pide al docente que la abra.":"Error: "+e.type));
+}
+function playerMsg(m){
+  if(m.t==="full")return home("Sala llena (máximo 35 jugadores)");
+  if(m.t==="late")return home("El juego ya comenzó");
+  if(m.t==="in"){P.name=m.name;P.s=null;return playerRender()}
+  if(m.t==="s"){P.s=m;P.end=Date.now()+m.rem;playerRender()}
+}
+function answer(i){
+  P.conn.send({t:"ans",qi:P.s.qi,c:i});P.s.me.ans=i;playerRender();
+}
+function playerRender(){
+  clearInterval(P.tm);const s=P.s;
+  if(!s||s.ph==="lobby")return app.innerHTML=`<h1>¡Estás dentro!</h1><div class="msg" style="background:rgba(255,255,255,.15)">${esc(P.name)}<br><small>Espera a que el docente inicie…</small></div>`;
+  if(s.ph==="q"){
+    if(s.me.ans!=null)return app.innerHTML=`<div class="row"><span class="pill">${s.qi+1}/${s.n}</span><span class="pill">${s.me.score} pts</span></div><div class="msg" style="background:rgba(255,255,255,.15)">✅ Respuesta enviada<br><small>Esperando a los demás…</small></div>`;
+    app.innerHTML=`<div class="row"><span class="pill">${s.qi+1}/${s.n}</span><span class="pill" id="tm">20</span><span class="pill">${s.me.score} pts</span></div>
+    <div class="card center" style="color:var(--ink);font-size:22px;font-weight:700">${esc(s.q.x)}</div>${optsHTML(s.q,"answer")}`;
+    P.tm=setInterval(()=>{const e=$("#tm");if(e)e.textContent=Math.max(0,Math.ceil((P.end-Date.now())/1000))},300);
+  }else if(s.ph==="r"){
+    const m=s.me,bg=m.ok?"var(--g)":m.ok===false?"var(--r)":"#555";
+    app.innerHTML=`<div class="msg" style="background:${bg}">${m.ok?"¡Correcto! 🎉":m.ok===false?"Incorrecto ✗":"Sin respuesta ⏱"}<br>${m.ok?"+"+m.pts+" pts":""}</div>
+    <div class="card center" style="color:var(--ink);font-size:20px">Respuesta correcta: <b>${esc(s.q.o[s.cor])}</b></div>
+    <div class="row"><span class="pill">Puesto ${m.rank}° de ${s.total}</span><span class="pill">${m.score} pts</span></div>`;
+  }else{
+    const t=s.top.slice(0,3);
+    app.innerHTML=`<h1>🏆 Fin del juego</h1>${podHTML(t)}
+    <div class="msg" style="background:rgba(255,255,255,.15)">Quedaste en el puesto ${s.me.rank}°<br><small>${s.me.score} puntos</small></div>`;
+  }
+}
+</script>
+</body>
+</html>
